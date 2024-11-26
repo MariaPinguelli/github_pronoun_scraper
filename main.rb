@@ -1,5 +1,6 @@
   require 'selenium-webdriver'
   require 'dotenv/load'
+  require 'json'
 
   puts "---------- Iniciando Script ----------"
   
@@ -21,7 +22,6 @@
   github_url = ENV['GITHUB_URL']
 
   # Configurando acesso a API do GitHub
-  # Configurando o cabeçalho de autenticação
 
   headers = {
     "Authorization" => "Bearer #{ENV['GITHUB_TOKEN']}",
@@ -29,48 +29,54 @@
     "User-Agent" => "pronoun_scraping_app"
   }
 
-  # Configurar e fazer get de um usuário
-  # response = Net::HTTP.get(URI("#{ENV['GITHUB_API_URL']}users/MariaPinguelli"))
-  # data = JSON.parse(response)
+  # Configurar e fazer get de uma página de contribuidores
+  response = Net::HTTP.get(URI("#{ENV['GITHUB_API_URL']}repos/JabRef/jabref/contributors?page=1&per_page=100"))
+  data = JSON.parse(response)
+
+  # File.write(path, JSON.dump(data))
 
   # Realizar login com credenciais em .env
   puts "---------- Fazendo login ----------"
-  # scraper.get "#{github_url+'login'}"
+  scraper.get "#{github_url+'login'}"
 
-  # username_input = scraper.find_element(:id, 'login_field')
-  # password_input = scraper.find_element(:id, 'password')
+  username_input = scraper.find_element(:id, 'login_field')
+  password_input = scraper.find_element(:id, 'password')
 
-  # username_input.send_keys(ENV['USERNAME'])
-  # password_input.send_keys(ENV['PASSWORD'])
+  username_input.send_keys(ENV['USERNAME'])
+  password_input.send_keys(ENV['PASSWORD'])
 
-  # login_button = scraper.find_element(:name, 'commit')
-  # login_button.click
+  login_button = scraper.find_element(:name, 'commit')
+  login_button.click
 
-  # Acessar repositório
-  puts "---------- Buscando lista de colaboradores ----------"
-  repo_namespace = 'JabRef/jabref' #Formato owner/repo
+  stats = [0,0,0]
 
-  uri = URI("#{ENV['GITHUB_API_URL']}repos/#{repo_namespace}/collaborators")
-  response = Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
-    request = Net::HTTP::Get.new(uri, headers)
-    http.request(request)
-  end
-
-  if response.is_a?(Net::HTTPSuccess)
-    contributors = JSON.parse(response)
+  data.each do |contributor|
     puts "\n\n\n------------------"
-    puts contributors
+    
+    begin
+      scraper.get "#{github_url+contributor['login']}"
+
+      pronouns = wait.until { scraper.find_element(:css, '[itemprop="pronouns"]') }.text
+
+      puts "#{contributor['login']} - #{pronouns}"
+
+      if pronouns == 'she/her'
+        stats[0] += 1
+      else
+        stats[1] += 1
+      end
+    rescue 
+      puts "#{contributor['login']} - no pronouns in bio"
+      stats[2] += 1
+    end
+    
     puts "------------------\n\n\n"
-  else
-    puts "Erro: #{response.code} - #{response.message} --- #{response.body}"
   end
-  
-  # scraper.get "#{github_url+data["login"]}"
 
-  # pronouns = wait.until { scraper.find_element(:css, '[itemprop="pronouns"]') }.text
-
-  # puts "\n\n\n------------------"
-  # puts pronouns
-  # puts "------------------\n\n\n"
+  puts "------------------"
+  puts stats[0]
+  puts stats[1]
+  puts stats[2]
+  puts "------------------"
 
   puts "---------- Fim ----------"
