@@ -1,82 +1,115 @@
-  require 'selenium-webdriver'
-  require 'dotenv/load'
-  require 'json'
+require 'selenium-webdriver'
+require 'dotenv/load'
+require 'json'
 
-  puts "---------- Iniciando Script ----------"
-  
-  Dotenv.overload
-  
-  # Configurando webdriver
-  client = Selenium::WebDriver::Remote::Http::Default.new
-  options = Selenium::WebDriver::Chrome::Options.new
-  options.add_argument('--headless')
-  scraper = Selenium::WebDriver.for(:chrome, options: options, http_client: client)
-  
-  # Arquivo para guardar dados
-  path = 'C:\Users\Maria Fernanda\Desktop\TCC 2\github_pronoun_scraper\users.json'
-  File.open(path, 'w')
+puts "---------- Iniciando Script ----------"
 
-  wait = Selenium::WebDriver::Wait.new(timeout: 10)
+Dotenv.overload
 
-  # Definir url
-  github_url = ENV['GITHUB_URL']
+# Configurando webdriver
+client = Selenium::WebDriver::Remote::Http::Default.new
+options = Selenium::WebDriver::Chrome::Options.new
+options.add_argument('--headless')
+scraper = Selenium::WebDriver.for(:chrome, options: options, http_client: client)
 
-  # Configurando acesso a API do GitHub
+wait = Selenium::WebDriver::Wait.new(timeout: 3)
+wait_login = Selenium::WebDriver::Wait.new(timeout: 35)
 
-  headers = {
-    "Authorization" => "Bearer #{ENV['GITHUB_TOKEN']}",
-    "X-GitHub-Api-Version" => "2022-11-28",
-    "User-Agent" => "pronoun_scraping_app"
-  }
+# Configurando acesso a API do GitHub
+github_url = ENV['GITHUB_URL']
 
-  # Configurar e fazer get de uma página de contribuidores
-  response = Net::HTTP.get(URI("#{ENV['GITHUB_API_URL']}repos/JabRef/jabref/contributors?page=1&per_page=100"))
+headers = {
+  "Authorization" => "Bearer #{ENV['GITHUB_TOKEN']}",
+  "X-GitHub-Api-Version" => "2022-11-28",
+  "User-Agent" => "pronoun_scraping_app"
+}
+
+# Arquivo para guardar dados
+users_file = './users.json'
+saved_users = []
+
+begin
+  File.open(users_file, 'r')
+rescue Errno::ENOENT => e
+  puts "File not found: #{e.message}"
+  puts "Creating file"
+  File.open(users_file, 'w')
+end
+
+file_content = File.read(users_file)
+saved_users = JSON.parse(file_content) unless file_content.empty?
+data = []
+contributors = []
+i = 0
+
+begin
+  i += 1
+  response = Net::HTTP.get(
+    URI("#{ENV['GITHUB_API_URL']}repos/JabRef/jabref/contributors?page=#{i}&per_page=100"),
+    headers
+  )
   data = JSON.parse(response)
+  data.each do |contributor|
+    unless saved_users.any? { |user| user['login'] == contributor['login'] } || contributor['login'].include?('[bot]') 
+      contributors << contributor
+    end
+  end
+end while !data.empty?
 
-  # File.write(path, JSON.dump(data))
-
-  # Realizar login com credenciais em .env
-  puts "---------- Fazendo login ----------"
+unless contributors.empty?
+  saved_users.concat(contributors)
+  File.write(users_file, JSON.pretty_generate(saved_users))
+  puts "before scraper.get"
+  #Login
   scraper.get "#{github_url+'login'}"
 
   username_input = scraper.find_element(:id, 'login_field')
   password_input = scraper.find_element(:id, 'password')
-
+  
   username_input.send_keys(ENV['USERNAME'])
   password_input.send_keys(ENV['PASSWORD'])
+  puts 'input data'
 
   login_button = scraper.find_element(:name, 'commit')
   login_button.click
+  puts 'clicked'
 
-  stats = [0,0,0]
+  sleep(30)
 
-  data.each do |contributor|
-    puts "\n\n\n------------------"
+  contributors.each do |contributor|
+    file_path = "./users/#{contributor['login']}.json"
     
     begin
+      File.open(file_path, 'r')
+    rescue Errno::ENOENT => e
+      # puts "File not found: #{e.message}"
+      # puts "Creating file"
+
+      File.open(file_path, 'w')
+
+      response = Net::HTTP.get(
+        URI("#{ENV['GITHUB_API_URL']}users/#{contributor['login']}"),
+        headers
+      )
+      user = JSON.parse(response)
+
       scraper.get "#{github_url+contributor['login']}"
 
-      pronouns = wait.until { scraper.find_element(:css, '[itemprop="pronouns"]') }.text
-
-      puts "#{contributor['login']} - #{pronouns}"
-
-      if pronouns == 'she/her'
-        stats[0] += 1
-      else
-        stats[1] += 1
+      begin
+        pronouns = wait.until { scraper.find_element(:css, '[itemprop="pronouns"]') }.text
+        user['pronouns'] = pronouns
+        puts pronouns
+      rescue => e
+        puts "\n\nERRO #{e}\n\n"
+        user['pronouns'] = 'no_pronouns'
       end
-    rescue 
-      puts "#{contributor['login']} - no pronouns in bio"
-      stats[2] += 1
+
+      File.write(file_path, JSON.pretty_generate(user))
     end
-    
-    puts "------------------\n\n\n"
+
   end
+else
+  puts "Não existem novos contribuidores a serem adicionados ao banco de dados."
+end
 
-  puts "------------------"
-  puts stats[0]
-  puts stats[1]
-  puts stats[2]
-  puts "------------------"
-
-  puts "---------- Fim ----------"
+scraper.quit
