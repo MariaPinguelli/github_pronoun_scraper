@@ -76,24 +76,32 @@ print('Usuários que declararam seus pronomes: ', filtered_user_total)
 # print("\n----Dados em %---- (total is user_list len)")
 declared_pronoun_stats = {
     'diff': 0,
-    'equal': 0
+    'equal': 0,
+    'declared_not_infered': 0
 }
 
 for user in filtered_user:
     declared_pronoun = user.get('declared_pronoun', 'unknown')
     infered_pronoun = user.get('infered_pronoun', 'unknown')
 
-    if declared_pronoun != infered_pronoun:
-        declared_pronoun_stats['diff'] = declared_pronoun_stats['diff'] + 1
-    elif declared_pronoun == infered_pronoun:
-        declared_pronoun_stats['equal'] = declared_pronoun_stats['equal'] + 1
+    # print(f"declared_pronoun - {declared_pronoun} | infered_pronoun {infered_pronoun}")
+
+    if infered_pronoun == 'unknown':
+        declared_pronoun_stats['declared_not_infered'] = declared_pronoun_stats['declared_not_infered'] + 1
+    else:
+        if declared_pronoun != infered_pronoun:
+            declared_pronoun_stats['diff'] = declared_pronoun_stats['diff'] + 1
+        elif declared_pronoun == infered_pronoun:
+            declared_pronoun_stats['equal'] = declared_pronoun_stats['equal'] + 1
 
 print('\n')
-print('diff n°: ', declared_pronoun_stats['diff'])
-print('equal n°: ', declared_pronoun_stats['equal'])
+print('Pronome declarado diferente do pronome inferido n°: ', declared_pronoun_stats['diff'])
+print('Pronome declarado igual do pronome inferido n°: ', declared_pronoun_stats['equal'])
 print('--------------')
-print(f"diff %: {((declared_pronoun_stats['diff']/filtered_user_total) * 100):.2f}%")
-print(f"equal %: {((declared_pronoun_stats['equal']/filtered_user_total) * 100):.2f}%")
+# print(f"Pronome declarado diferente do pronome inferido %: {((declared_pronoun_stats['diff']/filtered_user_total) * 100):.2f}%")
+# print(f"Pronome declarado igual do pronome inferido %: {((declared_pronoun_stats['equal']/filtered_user_total) * 100):.2f}%")
+# print('--------------')
+print('Pronome declarado e pronome inferido unknown n°: ', declared_pronoun_stats['declared_not_infered'])
 print('-------------------------\n')
 
 print('Dados sobre os pronomes inferidos como unknown')
