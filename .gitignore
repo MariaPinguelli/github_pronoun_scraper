@@ -174,4 +174,4 @@ cython_debug/
 .pypirc
 
 # Ignorar items específicos do projeto
-/users/*.json
+/db/*.json
