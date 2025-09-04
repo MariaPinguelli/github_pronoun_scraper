@@ -175,3 +175,4 @@ cython_debug/
 
 # Ignorar items específicos do projeto
 /db/*.json
+/reports/*.json
