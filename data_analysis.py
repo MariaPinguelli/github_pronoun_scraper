@@ -46,8 +46,13 @@ def generate_repo_report(repo_name: str, contributors: List[Dict[str, Any]]) -> 
 def save_report(report: Dict[str, Any], output_dir: str = 'reports') -> None:
     """Salva o relatório em um arquivo JSON"""
     Path(output_dir).mkdir(exist_ok=True)
-    repo_name = report['repo_name']
-    filename = f"{output_dir}/{repo_name}_report.json"
+    
+    # Verifica se é um relatório de repositório individual ou consolidado
+    if 'repo_name' in report:
+        filename = f"{output_dir}/{report['repo_name']}_report.json"
+    else:
+        # Para relatório consolidado, usa o nome do arquivo fornecido
+        filename = f"{output_dir}/consolidated_report.json"
     
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
@@ -88,14 +93,15 @@ def generate_all_reports(repos: List[Dict[str, Any]]) -> Dict[str, Any]:
             for value, count in values.items()
         }
     
-    save_report(consolidated_report, 'consolidated_report.json')
+    save_report(consolidated_report)
     
-    return all_reports, consolidated_report
+    return all_reports
 
-repos = files_utils.get_data('repos.json')
+# Execução principal
+if __name__ == "__main__":
+    repos = files_utils.get_data('repos.json')
+    all_reports = generate_all_reports(repos)
 
-all_reports, consolidated_report = generate_all_reports(repos)
-
-print("\nProcesso concluído!")
-print(f"Total de repositórios processados: {len(all_reports)}")
-print(f"Relatório consolidado salvo em: consolidated_report.json")
+    print("\nProcesso concluído!")
+    print(f"Total de repositórios processados: {len(all_reports)}")
+    print(f"Relatório consolidado salvo em: consolidated_report.json")

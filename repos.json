@@ -1,10 +1,42 @@
 [
   {
+    "owner": "altair-graphql",
+    "name": "altair"
+  },
+    {
+    "owner": "chaynHQ",
+    "name": "bloom-frontend"
+  },
+  {
+    "owner": "vuejs",
+    "name": "core"
+  },
+  {
+    "owner": "facebook",
+    "name": "create-react-app"
+  },
+  {
+    "owner": "JabRef",
+    "name": "jabref"
+  },
+  {
+    "owner": "opensourcediversity",
+    "name": "opensourcediversity.org"
+  },
+  {
+    "owner": "pyladies",
+    "name": "pyladies"
+  },
+  {
     "owner": "okfn-brasil",
     "name": "querido-diario"
   },
   {
-    "owner": "grokability",
-    "name": "snipe-it"
+    "owner": "railsgirls",
+    "name": "railsgirls.com"
+  },
+  {
+    "owner": "DjangoGirls",
+    "name": "tutorial"
   }
 ]

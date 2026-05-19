@@ -14,3 +14,48 @@ E para executar o projeto:
 ``python3 main.py``
 e após execução para ver estatísticas simples:
 ``python3 data_analysis.py``
+
+```json
+[
+  {
+    "owner": "altair-graphql",
+    "name": "altair"
+  },
+    {
+    "owner": "chaynHQ",
+    "name": "bloom-frontend"
+  },
+  {
+    "owner": "vuejs",
+    "name": "core"
+  },
+  {
+    "owner": "facebook",
+    "name": "create-react-app"
+  },
+  {
+    "owner": "JabRef",
+    "name": "jabref"
+  },
+  {
+    "owner": "opensourcediversity",
+    "name": "opensourcediversity.org"
+  },
+  {
+    "owner": "pyladies",
+    "name": "pyladies"
+  },
+  {
+    "owner": "okfn-brasil",
+    "name": "querido-diario"
+  },
+  {
+    "owner": "railsgirls",
+    "name": "railsgirls.com"
+  },
+  {
+    "owner": "DjangoGirls",
+    "name": "tutorial"
+  }
+]
+```
